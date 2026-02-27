@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.farmingcreditbackend.mapper.UserMapper">
+
+    <!-- 自定义查询方法 -->
+    <select id="selectByUsername" resultType="com.example.farmingcreditbackend.entity.User">
+        SELECT * FROM sys_user
+        WHERE username = #{username} AND deleted = 0
+    </select>
+
+    <select id="selectById" resultType="com.example.farmingcreditbackend.entity.User">
+        SELECT * FROM sys_user
+        WHERE id = #{id} AND deleted = 0
+    </select>
+
+    <update id="updateLoginInfo">
+        UPDATE sys_user
+        SET last_login_time = #{loginTime},
+            last_login_ip = #{loginIp},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectRoleCodesByUserId" resultType="string">
+        SELECT r.role_code
+        FROM sys_role r
+                 JOIN sys_user_role ur ON r.id = ur.role_id
+        WHERE ur.user_id = #{userId}
+    </select>
+
+    <select id="selectPermissionCodesByUserId" resultType="string">
+        SELECT DISTINCT p.permission_code
+        FROM sys_permission p
+                 JOIN sys_role_permission rp ON p.id = rp.permission_id
+                 JOIN sys_user_role ur ON rp.role_id = ur.role_id
+        WHERE ur.user_id = #{userId} AND p.permission_type = 'MENU'
+    </select>
+
+    <select id="countByUsername" resultType="int">
+        SELECT COUNT(*)
+        FROM sys_user
+        WHERE username = #{username} AND deleted = 0
+    </select>
+
+</mapper>

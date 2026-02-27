@@ -1,0 +1,149 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+  tomcat:
+    uri-encoding: UTF-8
+    max-threads: 200
+    min-spare-threads: 20
+
+# Spring配置
+spring:
+  application:
+    name: farming-credit-backend
+
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/agricultural_supplies_system?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: 123
+    hikari:
+      pool-name: FarmingCreditHikariCP
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
+      enabled: true
+
+  # Jackson配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    serialization:
+      write-dates-as-timestamps: false
+  data:
+    # Redis配置
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+# MyBatis-Plus配置
+mybatis-plus:
+  # 实体类包路径
+  type-aliases-package: com.example.farmingcreditbackend.entity
+  # mapper.xml文件位置
+  mapper-locations: classpath:mapper/**/*.xml
+  global-config:
+    db-config:
+      # 主键类型  0:"数据库ID自增", 1:"用户输入ID",2:"全局唯一ID (数字类型唯一ID)", 3:"全局唯一ID UUID";
+      id-type: auto
+      # 逻辑删除配置
+      logic-delete-field: deleted  # 逻辑删除字段
+      logic-delete-value: 1        # 逻辑已删除值(默认为 1)
+      logic-not-delete-value: 0    # 逻辑未删除值(默认为 0)
+  configuration:
+    # 开启驼峰命名转换
+    map-underscore-to-camel-case: true
+    # 开启缓存
+    cache-enabled: true
+    # 打印SQL语句
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # 配置JdbcTypeForNull
+    jdbc-type-for-null: null
+
+# 日志配置
+logging:
+  level:
+    com.example.farmingcreditbackend: debug
+    org.springframework.web: info
+    org.springframework.security: info
+    com.baomidou.mybatisplus: info
+  file:
+    name: logs/farming-credit.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+
+# JWT配置
+jwt:
+  secret: 213efebe314226682968f7ae965d95f3ca374678a48bc3bf0d133faf69cb4d3c52c0e5177517064c76a8afb68d517bad008f9e101c7d58b60f0fc3ce858d9de9
+  base64-secret: 213efebe314226682968f7ae965d95f3ca374678a48bc3bf0d133faf69cb4d3c52c0e5177517064c76a8afb68d517bad008f9e101c7d58b60f0fc3ce858d9de9
+  expiration: 86400
+  header: Authorization
+  token-prefix: "Bearer "
+  refresh-expiration: 2592000000
+
+# 项目配置
+project:
+  info:
+    name: farming-credit-backend
+    version: 1.0.0
+    description: 农资赊销与回款管理系统
+  upload:
+    path: ./uploads/
+    max-size: 5MB
+    allowed-types: .jpg,.jpeg,.png,.gif,.pdf,.doc,.docx
+  security:
+    cors:
+#      allowed-origins: http://localhost:5173,http://localhost:8080,http://localhost:3333
+      allowed-origins: "http://localhost:*"
+      allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+      allowed-headers: "*"
+      allow-credentials: true
+      max-age: 3600
+
+# SpringDoc OpenAPI配置 (Spring Boot 3.x 使用)
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  packages-to-scan: com.example.farmingcreditbackend.controller
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+# 验证码配置
+system:
+  captcha:
+    width: 120           # 验证码宽度
+    height: 40           # 验证码高度
+    length: 4            # 验证码长度
+    expire: 300          # 验证码过期时间（秒）
+    type: math           # 验证码类型：math-数学公式，char-字符验证码
+    font-name: Arial     # 字体名称
+    font-size: 25        # 字体大小
+    line-num: 5          # 干扰线数量
+    chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" # 验证码字符
