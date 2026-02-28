@@ -3,6 +3,7 @@ package com.example.farmingcreditbackend.service;
 import com.example.farmingcreditbackend.dto.LoginRequestDTO;
 import com.example.farmingcreditbackend.dto.LoginResponseDTO;
 import com.example.farmingcreditbackend.dto.UserInfoDTO;
+import com.example.farmingcreditbackend.entity.Farmer;
 import com.example.farmingcreditbackend.entity.User;
 import com.example.farmingcreditbackend.exception.BusinessException;
 import com.example.farmingcreditbackend.util.JwtTokenProvider;
@@ -54,6 +55,9 @@ public class AuthService implements UserDetailsService {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
+    private FarmerService farmerService;
 
     /**
      * 用户登录
@@ -167,6 +171,17 @@ public class AuthService implements UserDetailsService {
                 .roles(roles)
                 .permissions(permissions)
                 .build();
+    }
+
+    /**
+     * 获取当前登录的农户信息
+     */
+    public Farmer getCurrentFarmer() {
+        User user = getCurrentUser();
+        if (user == null || !"FARMER".equals(user.getUserType())) {
+            return null;
+        }
+        return farmerService.getFarmerByUserId(user.getId());
     }
 
     /**

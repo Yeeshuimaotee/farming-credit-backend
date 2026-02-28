@@ -28,4 +28,10 @@ public interface FarmerMapper extends BaseMapper<Farmer> {
      */
     @Update("UPDATE farmer SET total_debt = total_debt + #{amount} WHERE id = #{farmerId}")
     int addDebt(@Param("farmerId") Long farmerId, @Param("amount") BigDecimal amount);
+
+    /**
+     * 根据用户ID查询农户信息
+     */
+    @Select("SELECT * FROM farmer WHERE user_id = #{userId} AND status = 1")
+    Farmer selectByUserId(@Param("userId") Long userId);
 }

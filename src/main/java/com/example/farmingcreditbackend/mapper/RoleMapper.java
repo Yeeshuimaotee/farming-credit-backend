@@ -18,4 +18,7 @@ public interface RoleMapper extends BaseMapper<Role> {
             "JOIN sys_user_role ur ON r.id = ur.role_id " +
             "WHERE ur.user_id = #{userId}")
     List<String> selectRoleCodesByUserId(@Param("userId") Long userId);
+
+    @Select("SELECT id FROM sys_role WHERE role_code = #{roleCode}")
+    Long selectIdByCode(@Param("roleCode") String roleCode);
 }

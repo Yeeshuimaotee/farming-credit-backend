@@ -12,14 +12,15 @@ public class StoreService {
 
     private final StoreMapper storeMapper;
 
-    /**
-     * 根据店主用户ID获取店铺ID
-     */
     public Long getStoreIdByOwnerId(Long ownerId) {
         Long storeId = storeMapper.getStoreIdByOwnerId(ownerId);
         if (storeId == null) {
             throw new BusinessException("未找到店铺信息，请确认您已开通店铺");
         }
         return storeId;
+    }
+
+    public void createStore(Store store) {
+        storeMapper.insert(store);
     }
 }
