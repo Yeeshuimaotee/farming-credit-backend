@@ -106,4 +106,6 @@ public class GlobalExceptionHandler {
         log.error("系统异常, 请求路径: {}", request.getRequestURI(), e);
         return Result.error(500, "系统异常，请稍后重试");
     }
+
+
 }

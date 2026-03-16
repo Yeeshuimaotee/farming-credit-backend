@@ -1,4 +1,4 @@
-package com.example.farmingcreditbackend.controller.admin;
+package com.example.farmingcreditbackend.controller;
 
 import com.example.farmingcreditbackend.dto.*;
 import com.example.farmingcreditbackend.service.UserService;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/admin/users")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')") // 仅管理员可访问
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN','USER_QUERY')")
 public class UserController {
 
     private final UserService userService;

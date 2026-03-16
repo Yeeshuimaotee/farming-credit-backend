@@ -28,4 +28,14 @@ public interface ProductMapper extends BaseMapper<Product> {
     @Update("UPDATE product SET stock = stock - #{quantity} " +
             "WHERE id = #{productId} AND stock >= #{quantity}")
     int reduceStock(@Param("productId") Long productId, @Param("quantity") Integer quantity);
+
+    /**
+     * 批量查询指定店铺的商品信息（用于库存检查）
+     */
+    @Select("<script>" +
+            "SELECT id, product_name, stock FROM product " +
+            "WHERE store_id = #{storeId} AND id IN " +
+            "<foreach collection='productIds' item='id' open='(' separator=',' close=')'>#{id}</foreach>" +
+            "</script>")
+    List<Product> selectBatchByIds(@Param("storeId") Long storeId, @Param("productIds") List<Long> productIds);
 }

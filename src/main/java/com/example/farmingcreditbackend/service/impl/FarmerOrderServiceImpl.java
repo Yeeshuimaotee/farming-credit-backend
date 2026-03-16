@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.farmingcreditbackend.dto.*;
 import com.example.farmingcreditbackend.exception.BusinessException;
 import com.example.farmingcreditbackend.mapper.FarmerOrderMapper;
+import com.example.farmingcreditbackend.mapper.RepaymentMapper;
 import com.example.farmingcreditbackend.service.FarmerOrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import java.util.List;
 public class FarmerOrderServiceImpl implements FarmerOrderService {
 
     private final FarmerOrderMapper farmerOrderMapper;
+    private final RepaymentMapper repaymentMapper;
 
     @Override
     public FarmerOrderListResponseDTO getFarmerOrderList(FarmerOrderListRequestDTO request, Long farmerId) {
@@ -57,5 +59,16 @@ public class FarmerOrderServiceImpl implements FarmerOrderService {
         detail.setItems(items);
         System.out.println("detail"+detail);
         return detail;
+    }
+
+    @Override
+    public List<OrderRepaymentRecordDTO> getOrderRepayments(Long orderId, Long farmerId) {
+        // 1. 校验订单是否属于当前农户
+        boolean exists = farmerOrderMapper.checkOrderBelongsToFarmer(orderId, farmerId);
+        if (!exists) {
+            throw new BusinessException("无权查看此订单的还款记录");
+        }
+        // 2. 查询还款记录
+        return repaymentMapper.selectByOrderId(orderId);
     }
 }

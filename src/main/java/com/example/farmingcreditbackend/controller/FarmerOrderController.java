@@ -3,6 +3,7 @@ package com.example.farmingcreditbackend.controller;
 import com.example.farmingcreditbackend.dto.FarmerOrderDetailDTO;
 import com.example.farmingcreditbackend.dto.FarmerOrderListRequestDTO;
 import com.example.farmingcreditbackend.dto.FarmerOrderListResponseDTO;
+import com.example.farmingcreditbackend.dto.OrderRepaymentRecordDTO;
 import com.example.farmingcreditbackend.entity.Farmer;
 import com.example.farmingcreditbackend.service.AuthService;
 import com.example.farmingcreditbackend.service.FarmerOrderService;
@@ -10,6 +11,8 @@ import com.example.farmingcreditbackend.vo.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/farmer")
@@ -46,5 +49,19 @@ public class FarmerOrderController {
         }
         FarmerOrderDetailDTO detail = farmerOrderService.getFarmerOrderDetail(id, farmer.getId());
         return Result.success(detail);
+    }
+
+    /**
+     * 获取当前农户的订单还款记录
+     */
+    @GetMapping("/orders/{orderId}/repayments")
+    @PreAuthorize("hasRole('FARMER')")
+    public Result<List<OrderRepaymentRecordDTO>> getOrderRepayments(@PathVariable Long orderId) {
+        Farmer farmer = authService.getCurrentFarmer();
+        if (farmer == null) {
+            return Result.error("农户信息不存在");
+        }
+        List<OrderRepaymentRecordDTO> list = farmerOrderService.getOrderRepayments(orderId, farmer.getId());
+        return Result.success(list);
     }
 }

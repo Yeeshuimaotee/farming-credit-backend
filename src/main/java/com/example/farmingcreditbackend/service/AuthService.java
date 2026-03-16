@@ -19,6 +19,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -151,6 +152,7 @@ public class AuthService implements UserDetailsService {
     /**
      * 获取用户信息
      */
+    @Transactional(readOnly = true)
     public UserInfoDTO getUserInfo(String token) {
         Long userId = jwtTokenProvider.getUserIdFromToken(token);
         User user = userService.findById(userId);
