@@ -1,7 +1,7 @@
 package com.example.farmingcreditbackend.dto;
 
 import lombok.Data;
-import jakarta.validation.constraints.NotBlank;
+import javax.validation.constraints.NotBlank;
 /**
  * 登录请求DTO
  */

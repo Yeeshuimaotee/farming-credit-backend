@@ -3,7 +3,7 @@ package com.example.farmingcreditbackend.controller;
 import com.example.farmingcreditbackend.dto.*;
 import com.example.farmingcreditbackend.service.UserService;
 import com.example.farmingcreditbackend.vo.Result;
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

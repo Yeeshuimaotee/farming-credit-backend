@@ -7,7 +7,7 @@ server:
     max-threads: 200
     min-spare-threads: 20
 
-# Spring配置
+# Spring 配置
 spring:
   application:
     name: farming-credit-backend
@@ -82,6 +82,7 @@ mybatis-plus:
 logging:
   level:
     com.example.farmingcreditbackend: debug
+    com.example.farmingcreditbackend.service.CaptchaService: debug
     org.springframework.web: info
     org.springframework.security: info
     com.baomidou.mybatisplus: info

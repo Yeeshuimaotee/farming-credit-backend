@@ -39,7 +39,7 @@ public interface FarmerOrderMapper {
     /**
      * 查询订单商品明细
      */
-    @Select("SELECT product_name, specification, quantity, price, amount " +
+    @Select("SELECT product_name, specification, unit, quantity, price, amount " +
             "FROM order_item " +
             "WHERE order_id = #{orderId}")
     List<FarmerOrderDetailDTO.OrderItemDetail> selectOrderItems(@Param("orderId") Long orderId);

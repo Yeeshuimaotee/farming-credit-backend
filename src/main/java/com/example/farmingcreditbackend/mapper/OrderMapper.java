@@ -14,13 +14,19 @@ public interface OrderMapper extends BaseMapper<Order> {
     /**
      * 分页查询订单列表（关联农户表获取农户名称）
      */
-    @Select("SELECT co.order_no, f.farmer_name, co.order_date, co.total_amount, co.debt_amount, co.due_date, co.order_status " +
+    @Select("<script>" +
+            "SELECT co.id, co.order_no, f.farmer_name, co.order_date, co.total_amount, co.debt_amount, co.due_date, co.order_status, co.create_time " +
             "FROM credit_order co " +
             "LEFT JOIN farmer f ON co.farmer_id = f.id " +
             "WHERE co.store_id = #{storeId} " +
-            "AND (#{farmerName} IS NULL OR f.farmer_name LIKE CONCAT('%', #{farmerName}, '%')) " +
-            "AND (#{status} IS NULL OR co.order_status = #{status}) " +
-            "ORDER BY co.create_time DESC")
+            "<if test='farmerName != null and farmerName != \"\"'>" +
+            "  AND f.farmer_name LIKE CONCAT('%', #{farmerName}, '%') " +
+            "</if>" +
+            "<if test='status != null and status != \"\"'>" +
+            "  AND co.order_status = #{status} " +
+            "</if>" +
+            "ORDER BY co.create_time DESC" +
+            "</script>")
     Page<OrderListDTO> selectOrderListPage(Page<?> page,
                                           @Param("storeId") Long storeId,
                                           @Param("farmerName") String farmerName,

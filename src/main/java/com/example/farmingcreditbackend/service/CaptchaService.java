@@ -80,20 +80,31 @@ public class CaptchaService {
      */
     public boolean validateCaptcha(String captchaKey, String inputCode) {
         if (StringUtils.isEmpty(captchaKey) || StringUtils.isEmpty(inputCode)) {
+            log.warn("验证码参数为空：captchaKey={}, inputCode={}", captchaKey, inputCode);
             return false;
         }
 
         String redisKey = CAPTCHA_KEY + captchaKey;
         String storedCode = (String) redisTemplate.opsForValue().get(redisKey);
 
+        log.debug("验证验证码：captchaKey={}, inputCode={}, storedCode={}", captchaKey, inputCode, storedCode);
+
         if (storedCode == null) {
+            log.warn("验证码不存在或已过期：captchaKey={}", captchaKey);
             return false;
         }
 
-        // 验证成功后删除验证码
-        redisTemplate.delete(redisKey);
+        boolean isValid = storedCode.equalsIgnoreCase(inputCode);
+        log.info("验证码验证结果：{}", isValid ? "成功" : "失败");
 
-        return storedCode.equalsIgnoreCase(inputCode);
+        // 验证成功后，设置验证码立即过期（防止重复使用）
+        if (isValid) {
+            // 不立即删除，而是设置 1 秒过期，避免前端重复请求导致验证失败
+            redisTemplate.expire(redisKey, 1, TimeUnit.SECONDS);
+            log.debug("验证码已设置 1 秒后过期：captchaKey={}", captchaKey);
+        }
+
+        return isValid;
     }
 
     /**

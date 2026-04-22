@@ -1,7 +1,7 @@
 package com.example.farmingcreditbackend.dto;
 
 import lombok.Data;
-import jakarta.validation.constraints.Pattern;
+import javax.validation.constraints.Pattern;
 
 @Data
 public class UpdateUserRequestDTO {

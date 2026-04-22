@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +64,7 @@ public class AuthService implements UserDetailsService {
      * 用户登录
      */
     public LoginResponseDTO login(LoginRequestDTO loginRequest) {
-        // 1. 验证验证码
+//         1. 验证验证码
         boolean isCaptchaValid = captchaService.validateCaptcha(
                 loginRequest.getCaptchaKey(),
                 loginRequest.getCaptchaCode()

@@ -1,11 +1,13 @@
 package com.example.farmingcreditbackend.service;
 
+import com.example.farmingcreditbackend.dto.FarmerCreditDTO;
 import com.example.farmingcreditbackend.dto.FarmerCreditInfoDTO;
 import com.example.farmingcreditbackend.entity.FarmerStoreRel;
 import com.example.farmingcreditbackend.exception.BusinessException;
 import com.example.farmingcreditbackend.mapper.FarmerStoreRelMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
@@ -35,5 +37,24 @@ public class StoreFarmerService {
         dto.setUsedCredit(currentDebt);
         dto.setAvailableCredit(available);
         return dto;
+    }
+
+    /**
+     * 设置农户信用额度
+     */
+    @Transactional
+    public void setFarmerCredit(Long farmerId, Long storeId, FarmerCreditDTO creditDTO) {
+        FarmerStoreRel rel = farmerStoreRelMapper.selectByFarmerAndStore(farmerId, storeId);
+        if (rel == null) {
+            throw new BusinessException("农户与店铺无关联，请先建立关联关系");
+        }
+
+        // 更新信用额度
+        rel.setCreditLimit(creditDTO.getCreditLimit());
+        if (creditDTO.getRemark() != null && !creditDTO.getRemark().isEmpty()) {
+            rel.setRemark(creditDTO.getRemark());
+        }
+
+        farmerStoreRelMapper.updateById(rel);
     }
 }

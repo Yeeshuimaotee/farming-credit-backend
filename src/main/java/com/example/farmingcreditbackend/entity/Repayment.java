@@ -1,8 +1,6 @@
 package com.example.farmingcreditbackend.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -34,5 +32,7 @@ public class Repayment {
     private String attachmentIds;
     private Long operatorId;
     private String operatorName;
+    
+    @TableField(value = "create_time", fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 }

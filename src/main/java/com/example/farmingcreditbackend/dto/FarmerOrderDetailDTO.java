@@ -24,6 +24,7 @@ public class FarmerOrderDetailDTO {
     public static class OrderItemDetail {
         private String productName;
         private String specification;
+        private String unit;
         private Integer quantity;
         private BigDecimal price;
         private BigDecimal amount;

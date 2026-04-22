@@ -8,7 +8,7 @@ import com.example.farmingcreditbackend.entity.User;
 import com.example.farmingcreditbackend.exception.BusinessException;
 import com.example.farmingcreditbackend.service.*;
 import com.example.farmingcreditbackend.vo.Result;
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;

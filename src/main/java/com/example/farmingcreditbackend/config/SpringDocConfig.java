@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * SpringDoc OpenAPI 配置 (Spring Boot 3.x)
+ * SpringDoc OpenAPI 配置 (Spring Boot 2.x)
  */
 @Configuration
 public class SpringDocConfig {

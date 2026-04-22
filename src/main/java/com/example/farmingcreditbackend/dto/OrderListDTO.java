@@ -7,6 +7,7 @@ import java.time.LocalDate;
 
 @Data
 public class OrderListDTO {
+    private Long id; // 订单 ID，用于前端操作
     private String orderNo;
     private String farmerName;
     private LocalDate orderDate;
