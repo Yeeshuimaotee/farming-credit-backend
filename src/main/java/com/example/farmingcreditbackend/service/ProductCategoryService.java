@@ -33,4 +33,9 @@ public interface ProductCategoryService {
      * 删除分类
      */
     void deleteCategory(Long categoryId);
+    
+    /**
+     * 根据ID获取分类
+     */
+    ProductCategory getById(Long categoryId);
 }

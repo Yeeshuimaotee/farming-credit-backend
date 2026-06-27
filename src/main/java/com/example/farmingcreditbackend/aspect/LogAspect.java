@@ -63,6 +63,7 @@ public class LogAspect {
             log.setUsername("anonymous");
         }
         
+        Object result = null;
         try {
             // 序列化请求参数
             try {
@@ -72,7 +73,7 @@ public class LogAspect {
             }
             
             // 执行方法
-            Object result = point.proceed();
+            result = point.proceed();
             
             // 记录成功
             log.setStatus(1);
@@ -96,6 +97,6 @@ public class LogAspect {
             operationLogService.saveLog(log);
         }
         
-        return point.proceed();
+        return result;
     }
 }

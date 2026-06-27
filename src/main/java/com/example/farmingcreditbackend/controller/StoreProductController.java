@@ -6,8 +6,10 @@ import com.example.farmingcreditbackend.dto.ProductSelectDTO;
 import com.example.farmingcreditbackend.dto.StockCheckRequestDTO;
 import com.example.farmingcreditbackend.dto.StockCheckResultDTO;
 import com.example.farmingcreditbackend.entity.Product;
+import com.example.farmingcreditbackend.entity.ProductCategory;
 import com.example.farmingcreditbackend.mapper.ProductMapper;
 import com.example.farmingcreditbackend.service.AuthService;
+import com.example.farmingcreditbackend.service.ProductCategoryService;
 import com.example.farmingcreditbackend.service.ProductService;
 import com.example.farmingcreditbackend.service.StoreService;
 import com.example.farmingcreditbackend.vo.Result;
@@ -26,6 +28,7 @@ public class StoreProductController {
     private final ProductService productService;
     private final StoreService storeService;
     private final AuthService authService;
+    private final ProductCategoryService productCategoryService;
 
     /**
      * 获取商品列表（分页）
@@ -82,6 +85,14 @@ public class StoreProductController {
         Long userId = authService.getCurrentUser().getId();
         Long storeId = storeService.getStoreIdByOwnerId(userId);
         
+        // 检查分类状态
+        if (product.getCategoryId() != null) {
+            ProductCategory category = productCategoryService.getById(product.getCategoryId());
+            if (category != null && category.getStatus() == 0 && product.getStatus() == 1) {
+                return Result.error("分类已被禁用，无法上架商品");
+            }
+        }
+        
         product.setStoreId(storeId);
         productMapper.insert(product);
         
@@ -99,6 +110,14 @@ public class StoreProductController {
         Product existing = productMapper.selectById(id);
         if (existing == null || !existing.getStoreId().equals(storeId)) {
             return Result.error("商品不存在");
+        }
+        
+        // 检查分类状态
+        if (product.getCategoryId() != null) {
+            ProductCategory category = productCategoryService.getById(product.getCategoryId());
+            if (category != null && category.getStatus() == 0 && product.getStatus() == 1) {
+                return Result.error("分类已被禁用，无法上架商品");
+            }
         }
         
         product.setId(id);
@@ -153,9 +172,9 @@ public class StoreProductController {
         queryWrapper.eq("store_id", storeId)
                 .eq("status", 1)
                 .and(wrapper -> wrapper
-                    .lt("stock", "min_stock")
+                    .apply("stock < min_stock")
                     .or()
-                    .lt("stock", "safety_stock")
+                    .apply("stock < safety_stock")
                 );
         
         List<Product> warningProducts = productMapper.selectList(queryWrapper);

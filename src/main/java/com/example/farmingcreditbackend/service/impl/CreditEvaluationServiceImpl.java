@@ -9,6 +9,7 @@ import com.example.farmingcreditbackend.mapper.FarmerMapper;
 import com.example.farmingcreditbackend.mapper.OrderMapper;
 import com.example.farmingcreditbackend.mapper.RepaymentMapper;
 import com.example.farmingcreditbackend.service.CreditEvaluationService;
+import com.example.farmingcreditbackend.service.CreditEvaluationWeightService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -45,6 +46,9 @@ public class CreditEvaluationServiceImpl implements CreditEvaluationService {
     
     @Autowired
     private RepaymentMapper repaymentMapper;
+    
+    @Autowired
+    private CreditEvaluationWeightService weightService;
     
     @Override
     @Transactional
@@ -133,23 +137,26 @@ public class CreditEvaluationServiceImpl implements CreditEvaluationService {
                 .multiply(BigDecimal.valueOf(100));
         evaluation.setActiveMonthRatio(activeMonthRatio);
         
-        int baseScore = 60;
+        // 获取信用评估权重配置
+        com.example.farmingcreditbackend.entity.CreditEvaluationWeight weightConfig = weightService.getWeightByStoreId(storeId);
+        int baseScore = weightConfig.getBaseScore();
         int score = baseScore;
         
-        score += (int) repaymentRate.doubleValue() * 0.3;
+        // 使用配置的权重计算评分
+        score += (int) (repaymentRate.doubleValue() * weightConfig.getRepaymentRateWeight());
         
         if (avgOverdueDays.compareTo(BigDecimal.ZERO) > 0) {
-            score -= avgOverdueDays.intValue() * 2;
+            score -= (int) (avgOverdueDays.intValue() * weightConfig.getOverdueDaysWeight());
         }
         
-        score -= totalOverdueCount * 5;
+        score -= (int) (totalOverdueCount * weightConfig.getOverdueCountWeight());
         
         if (totalOrderCount > 10) {
-            score += 5;
+            score += (int) Math.round(weightConfig.getOrderCountWeight());
         }
         
         if (annualCreditAmount.compareTo(BigDecimal.valueOf(5000)) > 0) {
-            score += 5;
+            score += (int) Math.round(weightConfig.getCreditAmountWeight());
         }
         
         score = Math.max(0, Math.min(100, score));

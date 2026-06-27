@@ -1,6 +1,8 @@
 package com.example.farmingcreditbackend.controller;
 
+import com.example.farmingcreditbackend.entity.Product;
 import com.example.farmingcreditbackend.entity.ProductCategory;
+import com.example.farmingcreditbackend.mapper.ProductMapper;
 import com.example.farmingcreditbackend.service.ProductCategoryService;
 import com.example.farmingcreditbackend.vo.Result;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import java.util.List;
 public class ProductCategoryController {
 
     private final ProductCategoryService categoryService;
+    private final ProductMapper productMapper;
 
     /**
      * 获取分类列表（树形结构）
@@ -63,5 +66,23 @@ public class ProductCategoryController {
     public Result<Void> deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);
         return Result.success();
+    }
+    
+    /**
+     * 获取分类下的商品数量
+     */
+    @GetMapping("/{id}/product-count")
+    public Result<Integer> getProductCount(@PathVariable Long id) {
+        int count = productMapper.countByCategoryId(id);
+        return Result.success(count);
+    }
+    
+    /**
+     * 获取分类下的商品列表
+     */
+    @GetMapping("/{id}/products")
+    public Result<List<Product>> getCategoryProducts(@PathVariable Long id) {
+        List<Product> products = productMapper.selectByCategoryId(id);
+        return Result.success(products);
     }
 }

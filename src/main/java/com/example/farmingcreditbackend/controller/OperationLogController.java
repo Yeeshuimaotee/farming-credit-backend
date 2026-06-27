@@ -1,34 +1,29 @@
 package com.example.farmingcreditbackend.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.example.farmingcreditbackend.entity.OperationLog;
 import com.example.farmingcreditbackend.service.OperationLogService;
 import com.example.farmingcreditbackend.vo.Result;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-/**
- * 操作日志控制器
- */
 @RestController
-@RequestMapping("/admin/operation-logs")
+@RequestMapping("/operation-log")
 @RequiredArgsConstructor
 public class OperationLogController {
-    
+
     private final OperationLogService operationLogService;
-    
+
     /**
-     * 分页查询操作日志
+     * 获取操作日志列表
      */
-    @GetMapping
-    public Result<Page<OperationLog>> getLogList(
-            @RequestParam(defaultValue = "1") Integer current,
+    @GetMapping("/list")
+    public Result<Object> getOperationLogList(
+            @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate) {
-        
-        Page<OperationLog> page = operationLogService.getLogList(current, size, userId, startDate, endDate);
-        return Result.success(page);
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String logType) {
+        return Result.success(operationLogService.getOperationLogList(page, size, username, logType));
     }
 }

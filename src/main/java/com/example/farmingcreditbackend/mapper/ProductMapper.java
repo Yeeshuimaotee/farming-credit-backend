@@ -38,4 +38,22 @@ public interface ProductMapper extends BaseMapper<Product> {
             "<foreach collection='productIds' item='id' open='(' separator=',' close=')'>#{id}</foreach>" +
             "</script>")
     List<Product> selectBatchByIds(@Param("storeId") Long storeId, @Param("productIds") List<Long> productIds);
+    
+    /**
+     * 检查分类下是否有商品
+     */
+    @Select("SELECT COUNT(*) FROM product WHERE category_id = #{categoryId}")
+    int countByCategoryId(@Param("categoryId") Long categoryId);
+    
+    /**
+     * 获取分类下的商品列表
+     */
+    @Select("SELECT * FROM product WHERE category_id = #{categoryId}")
+    List<Product> selectByCategoryId(@Param("categoryId") Long categoryId);
+    
+    /**
+     * 根据分类ID更新商品状态
+     */
+    @Update("UPDATE product SET status = #{status} WHERE category_id = #{categoryId}")
+    void updateStatusByCategoryId(@Param("categoryId") Long categoryId, @Param("status") Integer status);
 }

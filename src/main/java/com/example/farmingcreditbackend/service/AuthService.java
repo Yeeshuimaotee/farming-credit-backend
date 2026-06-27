@@ -4,6 +4,7 @@ import com.example.farmingcreditbackend.dto.LoginRequestDTO;
 import com.example.farmingcreditbackend.dto.LoginResponseDTO;
 import com.example.farmingcreditbackend.dto.UserInfoDTO;
 import com.example.farmingcreditbackend.entity.Farmer;
+import com.example.farmingcreditbackend.entity.Store;
 import com.example.farmingcreditbackend.entity.User;
 import com.example.farmingcreditbackend.exception.BusinessException;
 import com.example.farmingcreditbackend.util.JwtTokenProvider;
@@ -60,6 +61,9 @@ public class AuthService implements UserDetailsService {
     @Autowired
     private FarmerService farmerService;
 
+    @Autowired
+    private StoreService storeService;
+
     /**
      * 用户登录
      */
@@ -71,13 +75,13 @@ public class AuthService implements UserDetailsService {
         );
 
         if (!isCaptchaValid) {
-            throw new BusinessException("登录失败,请检查账号密码及验证码");
+            throw new BusinessException("验证码不正确,请重新输入验证码");
         }
 
         // 2. 根据用户名查询用户
         User user = userService.findByUsername(loginRequest.getUsername());
         if (user == null) {
-            throw new BusinessException("用户不存在");
+            throw new BusinessException("用户名或密码错误");
         }
 
         // 3. 检查用户状态
@@ -91,7 +95,7 @@ public class AuthService implements UserDetailsService {
 
         // 4. 验证密码
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new BusinessException("密码错误");
+            throw new BusinessException("用户名或密码错误");
         }
 
         // 5. 验证用户类型是否匹配
@@ -164,6 +168,24 @@ public class AuthService implements UserDetailsService {
         List<String> roles = roleService.getRoleCodesByUserId(userId);
         List<String> permissions = permissionService.getPermissionCodesByUserId(userId);
 
+        // 根据用户类型获取对应的 farmerId 或 storeId
+        Long farmerId = null;
+        Long storeId = null;
+
+        if ("FARMER".equals(user.getUserType())) {
+            // 农户：查询 Farmer 表获取 farmerId
+            Farmer farmer = farmerService.getFarmerByUserId(userId);
+            if (farmer != null) {
+                farmerId = farmer.getId();
+            }
+        } else if ("STORE_OWNER".equals(user.getUserType())) {
+            // 店主：查询 Store 表获取 storeId
+            Store store = storeService.getStoreByUserId(userId);
+            if (store != null) {
+                storeId = store.getId();
+            }
+        }
+
         return UserInfoDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
@@ -172,6 +194,8 @@ public class AuthService implements UserDetailsService {
                 .userType(user.getUserType())
                 .roles(roles)
                 .permissions(permissions)
+                .farmerId(farmerId)
+                .storeId(storeId)
                 .build();
     }
 

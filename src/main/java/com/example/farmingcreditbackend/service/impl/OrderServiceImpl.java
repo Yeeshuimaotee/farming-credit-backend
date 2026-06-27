@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +26,8 @@ public class OrderServiceImpl implements OrderService {
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
     private final com.example.farmingcreditbackend.mapper.ProductMapper productMapper;
+    private final com.example.farmingcreditbackend.mapper.FarmerStoreRelMapper farmerStoreRelMapper;
+    private final com.example.farmingcreditbackend.mapper.FarmerMapper farmerMapper;
 
     @Override
     @Transactional
@@ -121,12 +124,137 @@ public class OrderServiceImpl implements OrderService {
             }
         }
         
+        // 订单创建成功后，更新农户的欠款
+        updateFarmerDebtAfterOrderCreated(request.getFarmerId(), storeId, totalAmount);
+        
         CreateOrderResponseDTO response = new CreateOrderResponseDTO();
         response.setOrderId(order.getId());
         response.setOrderNo(order.getOrderNo());
         
         log.info("订单创建成功，订单号：{}, 订单 ID: {}", order.getOrderNo(), order.getId());
         return response;
+    }
+    
+    /**
+     * 订单创建后更新农户的欠款记录
+     */
+    private void updateFarmerDebtAfterOrderCreated(Long farmerId, Long storeId, BigDecimal orderAmount) {
+        try {
+            log.info("订单创建后更新农户欠款记录：农户 ID={}, 店铺 ID={}, 订单金额={}", farmerId, storeId, orderAmount);
+            
+            // 1. 更新 farmer_store_rel 表的欠款
+            com.example.farmingcreditbackend.entity.FarmerStoreRel rel = 
+                farmerStoreRelMapper.selectByFarmerAndStore(farmerId, storeId);
+            
+            if (rel != null) {
+                BigDecimal currentDebt = rel.getCurrentDebt() != null ? rel.getCurrentDebt() : BigDecimal.ZERO;
+                BigDecimal newDebt = currentDebt.add(orderAmount);
+                
+                rel.setCurrentDebt(newDebt);
+                farmerStoreRelMapper.updateById(rel);
+                
+                log.info("farmer_store_rel 欠款更新成功：原欠款={}, 订单金额={}, 新欠款={}", 
+                    currentDebt, orderAmount, newDebt);
+                
+                // 2. 更新 farmer 表的 total_debt
+                com.example.farmingcreditbackend.entity.Farmer farmer = farmerMapper.selectById(farmerId);
+                if (farmer != null) {
+                    BigDecimal farmerTotalDebt = farmer.getTotalDebt() != null ? farmer.getTotalDebt() : BigDecimal.ZERO;
+                    BigDecimal newFarmerDebt = farmerTotalDebt.add(orderAmount);
+                    
+                    farmer.setTotalDebt(newFarmerDebt);
+                    
+                    // 根据信用额度和欠款自动调整信用等级和状态
+                    updateCreditLevelAndStatus(farmer, rel);
+                    
+                    farmerMapper.updateById(farmer);
+                    
+                    log.info("farmer 表总欠款和信用等级更新成功：原总欠款={}, 订单金额={}, 新总欠款={}", 
+                        farmerTotalDebt, orderAmount, newFarmerDebt);
+                }
+            }
+        } catch (Exception e) {
+            log.error("更新农户欠款记录失败：农户 ID={}, 错误={}", farmerId, e.getMessage());
+            // 这里不抛出异常，避免影响订单创建流程
+        }
+    }
+    
+    /**
+     * 根据信用额度与欠款自动调整信用等级和状态
+     */
+    private void updateCreditLevelAndStatus(
+            com.example.farmingcreditbackend.entity.Farmer farmer, 
+            com.example.farmingcreditbackend.entity.FarmerStoreRel rel) {
+        
+        BigDecimal creditLimit = rel.getCreditLimit() != null ? rel.getCreditLimit() : BigDecimal.ZERO;
+        BigDecimal currentDebt = rel.getCurrentDebt() != null ? rel.getCurrentDebt() : BigDecimal.ZERO;
+        
+        // 如果信用额度为 0，不进行调整
+        if (creditLimit.compareTo(BigDecimal.ZERO) == 0) {
+            return;
+        }
+        
+        // 计算欠款比例：欠款 / 信用额度 * 100
+        BigDecimal debtRatio = currentDebt.multiply(BigDecimal.valueOf(100))
+                .divide(creditLimit, 2, java.math.RoundingMode.HALF_UP);
+        
+        // 根据欠款比例调整信用等级
+        String newCreditLevel;
+        if (debtRatio.compareTo(BigDecimal.valueOf(0)) == 0) {
+            // 无欠款
+            newCreditLevel = "EXCELLENT";
+        } else if (debtRatio.compareTo(BigDecimal.valueOf(30)) < 0) {
+            // 欠款 < 30%
+            newCreditLevel = "GOOD";
+        } else if (debtRatio.compareTo(BigDecimal.valueOf(50)) < 0) {
+            // 欠款 < 50%
+            newCreditLevel = "NORMAL";
+        } else if (debtRatio.compareTo(BigDecimal.valueOf(80)) < 0) {
+            // 欠款 < 80%
+            newCreditLevel = "POOR";
+        } else {
+            // 欠款 >= 80%
+            newCreditLevel = "BAD";
+        }
+        
+        // 更新信用等级
+        farmer.setCreditLevel(newCreditLevel);
+        
+        // 根据欠款比例调整状态
+        if (debtRatio.compareTo(BigDecimal.valueOf(100)) >= 0) {
+            // 超额（欠款 > 信用额度），禁用农户
+            farmer.setStatus(0);
+        } else {
+            // 正常状态
+            farmer.setStatus(1);
+        }
+        
+        // 同步更新信用评分（基于信用等级简单映射）
+        Integer creditScore = calculateCreditScore(newCreditLevel);
+        farmer.setCreditScore(creditScore);
+    }
+    
+    /**
+     * 根据信用等级计算对应的信用评分
+     */
+    private Integer calculateCreditScore(String creditLevel) {
+        if (creditLevel == null) {
+            return 60;
+        }
+        switch (creditLevel) {
+            case "EXCELLENT":
+                return 95;
+            case "GOOD":
+                return 80;
+            case "NORMAL":
+                return 65;
+            case "POOR":
+                return 45;
+            case "BAD":
+                return 25;
+            default:
+                return 60;
+        }
     }
 
     @Override

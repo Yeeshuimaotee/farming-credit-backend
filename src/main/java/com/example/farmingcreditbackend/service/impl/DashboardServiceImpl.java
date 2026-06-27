@@ -48,6 +48,7 @@ public class DashboardServiceImpl implements DashboardService {
         dto.setCustomerStatistics(calculateCustomerStatistics(storeId));
         dto.setProductRanking(getHotProducts(storeId, 10));
         dto.setCustomerDebtRanking(getDebtRanking(storeId, 10));
+        dto.setUpcomingRepayments(getUpcomingRepayments(storeId, 10));
         
         return dto;
     }
@@ -284,7 +285,9 @@ public class DashboardServiceImpl implements DashboardService {
             DashboardStatisticsDTO.CustomerDebtRanking ranking = farmerDebtMap.computeIfAbsent(order.getFarmerId(), k -> {
                 DashboardStatisticsDTO.CustomerDebtRanking r = new DashboardStatisticsDTO.CustomerDebtRanking();
                 r.setFarmerId(order.getFarmerId());
-                r.setFarmerName("农户" + order.getFarmerId());
+                // 查询真实的农户姓名
+                Farmer farmer = farmerMapper.selectById(order.getFarmerId());
+                r.setFarmerName(farmer != null && farmer.getFarmerName() != null ? farmer.getFarmerName() : "农户" + order.getFarmerId());
                 r.setDebtAmount(BigDecimal.ZERO);
                 r.setOverdueDays(0);
                 return r;
@@ -492,5 +495,46 @@ public class DashboardServiceImpl implements DashboardService {
                 : BigDecimal.ZERO);
         
         return analysis;
+    }
+    
+    /**
+     * 获取最近订单
+     */
+    private List<DashboardStatisticsDTO.UpcomingRepayment> getUpcomingRepayments(Long storeId, int limit) {
+        List<Order> orders = orderMapper.selectList(new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Order>()
+                .eq("store_id", storeId)
+                .orderByDesc("create_time")
+                .last("LIMIT " + limit));
+        
+        List<DashboardStatisticsDTO.UpcomingRepayment> repayments = new ArrayList<>();
+        
+        orders.forEach(order -> {
+            DashboardStatisticsDTO.UpcomingRepayment repayment = new DashboardStatisticsDTO.UpcomingRepayment();
+            repayment.setOrderNo(order.getOrderNo());
+            
+            // 查询真实的农户姓名
+            Farmer farmer = farmerMapper.selectById(order.getFarmerId());
+            repayment.setFarmerName(farmer != null && farmer.getFarmerName() != null ? farmer.getFarmerName() : "农户" + order.getFarmerId());
+            
+            repayment.setTotalAmount(order.getTotalAmount());
+            repayment.setDueDate(order.getDueDate() != null ? order.getDueDate().toString() : "");
+            
+            // 设置订单状态
+            String status;
+            if (order.getOverdueDays() != null && order.getOverdueDays() > 0) {
+                status = "已逾期";
+            } else if ("PENDING".equals(order.getOrderStatus())) {
+                status = "待审核";
+            } else if ("PAID_OFF".equals(order.getOrderStatus()) || "PAID".equals(order.getPaymentStatus())) {
+                status = "已结清";
+            } else {
+                status = "待还款";
+            }
+            repayment.setStatus(status);
+            
+            repayments.add(repayment);
+        });
+        
+        return repayments;
     }
 }

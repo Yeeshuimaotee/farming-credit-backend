@@ -23,6 +23,11 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         
         // 设置更新时间
         this.strictInsertFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());
+        
+        // 设置parentId为null，确保它被包含在INSERT语句中
+        if (metaObject.hasSetter("parentId")) {
+            this.fillStrategy(metaObject, "parentId", null);
+        }
     }
 
     @Override

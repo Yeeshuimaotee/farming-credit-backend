@@ -15,9 +15,9 @@ import java.util.List;
 public interface ProductCategoryMapper extends BaseMapper<ProductCategory> {
     
     /**
-     * 查询所有启用的分类
+     * 查询所有分类
      */
-    @Select("SELECT * FROM product_category WHERE status = 1 ORDER BY sort_order ASC, parent_id ASC, id ASC")
+    @Select("SELECT * FROM product_category ORDER BY sort_order ASC, parent_id ASC, id ASC")
     List<ProductCategory> selectActiveCategories();
     
     /**

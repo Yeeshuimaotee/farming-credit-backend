@@ -37,6 +37,11 @@ public class DashboardStatisticsDTO {
      */
     private List<CustomerDebtRanking> customerDebtRanking;
     
+    /**
+     * 最近订单
+     */
+    private List<UpcomingRepayment> upcomingRepayments;
+    
     @Data
     public static class SalesStatistics {
         private BigDecimal todaySales; // 今日销售额
@@ -81,5 +86,14 @@ public class DashboardStatisticsDTO {
         private String farmerName;
         private BigDecimal debtAmount; // 欠款金额
         private Integer overdueDays; // 逾期天数
+    }
+    
+    @Data
+    public static class UpcomingRepayment {
+        private String orderNo; // 订单号
+        private String farmerName; // 农户名称
+        private BigDecimal totalAmount; // 总金额
+        private String dueDate; // 应还日期
+        private String status; // 状态
     }
 }

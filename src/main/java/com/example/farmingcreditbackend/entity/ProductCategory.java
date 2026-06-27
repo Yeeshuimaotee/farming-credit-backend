@@ -22,8 +22,8 @@ public class ProductCategory {
     @TableField("category_code")
     private String categoryCode;
     
-    @TableField("parent_id")
-    private Long parentId; // 父分类 ID，0 表示顶级
+    @TableField(value = "parent_id", fill = FieldFill.INSERT)
+    private Long parentId = null; // 父分类 ID，null 表示顶级
     
     @TableField("icon")
     private String icon;

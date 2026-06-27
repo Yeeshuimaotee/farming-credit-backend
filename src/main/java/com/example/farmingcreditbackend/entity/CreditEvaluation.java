@@ -81,4 +81,7 @@ public class CreditEvaluation {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @TableField(value = "create_time", fill = FieldFill.INSERT)
     private LocalDateTime createTime;
+    
+    @TableField(exist = false)
+    private String farmerName;
 }
